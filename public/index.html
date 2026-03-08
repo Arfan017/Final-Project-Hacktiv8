@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduBot - Smart Learning Assistant</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- React & Babel CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons via ESM -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18",
+        "react-dom": "https://esm.sh/react-dom@18",
+        "react-dom/client": "https://esm.sh/react-dom@18/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react"
+      }
+    }
+    </script>
+
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div id="root"></div>
+
+    <script type="module">
+        async function init() {
+            try {
+                // Fetch the JSX file
+                const response = await fetch('./index.jsx');
+                if (!response.ok) throw new Error('Failed to fetch index.jsx');
+                const code = await response.text();
+
+                // Transform JSX using Babel standalone
+                const transformed = Babel.transform(code, {
+                    presets: ['react'],
+                    filename: 'index.jsx',
+                    sourceMaps: 'inline'
+                }).code;
+
+                // Create a temporary blob URL for the transformed ESM
+                const blob = new Blob([transformed], { type: 'application/javascript' });
+                const url = URL.createObjectURL(blob);
+
+                // Load the transformed module
+                const { default: App } = await import(url);
+
+                // Render the app
+                const { createRoot } = await import('react-dom/client');
+                const root = createRoot(document.getElementById('root'));
+                root.render(React.createElement(App));
+
+                console.log('EduBot UI loaded successfully');
+            } catch (err) {
+                console.error('Error loading EduBot:', err);
+                document.getElementById('root').innerHTML = `
+                    <div class="flex items-center justify-center h-screen text-red-500 p-4 text-center">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">Gagal Memuat UI</h2>
+                            <p>${err.message}</p>
+                            <p class="mt-4 text-gray-500 text-sm">Pastikan server backend berjalan dan dapat diakses.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Wait for Babel to be ready
+        if (window.Babel) {
+            init();
+        } else {
+            console.error('Babel not found - check CDN connection');
+        }
+    </script>
+
+</body>
+
+</html>
